@@ -1,0 +1,47 @@
+---
+- name: Setup DB Server and Worker Servers
+  hosts: all
+  become: yes
+  tasks:
+    - name: Install MySQL on DB Server
+      apt:
+        name: mysql-server
+        state: present
+      when: "'db_server' in group_names"
+
+    - name: Configure MySQL for remote access
+      mysql_user:
+        name: cloud
+        password: Raincloud=123
+        priv: "*.*:ALL"
+        state: present
+      when: "'db_server' in group_names"
+
+    - name: Install Nginx, Composer, PHP 8.1, and Git on Worker Servers
+      apt:
+        name:
+          - nginx
+          - composer
+          - php8.1
+          - git
+        state: present
+      when: "'worker_servers' in group_names"
+
+    - name: Clone webtka repository on Worker Servers
+      git:
+        repo: "https://github.com/mrvlvenom/webtka"
+        dest: "/var/www/webtka"
+      when: "'worker_servers' in group_names"
+
+    - name: Configure Nginx for webtka
+      template:
+        src: /path/to/nginx_webtka.conf.j2
+        dest: /etc/nginx/sites-available/webtka
+      notify: Enable Nginx site
+      when: "'worker_servers' in group_names"
+
+  handlers:
+    - name: Enable Nginx site
+      command:
+        cmd: nginx -s reload
+      when: "'worker_servers' in group_names"

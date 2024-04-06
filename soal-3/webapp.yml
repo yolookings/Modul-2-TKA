@@ -1,0 +1,45 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+    - name: Install Apache
+      package:
+        name: apache2
+        state: present
+
+    - name: Start Apache
+      service:
+        name: apache2
+        state: started
+        enabled: yes
+
+    - name: Configure Apache default page
+      copy:
+        content: |
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta charset="UTF-8" />
+              <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+              <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+              <title>Welcome to Kelompok C13 Web App</title>
+            </head>
+            <body>
+              <h1>Welcome to Kelompok C13 Web App</h1>
+              <h2>Anggota Kelompok:</h2>
+              <ul>
+                <li>Maulana Ahmad Zahiri</li>
+                <li>Randist Prawandha Putera</li>
+                <li>Johanes Edward Nathanael</li>
+              </ul>
+            </body>
+          </html>
+        dest: /var/www/html/index.html
+        mode: "0644"
+      notify: Restart Apache
+
+  handlers:
+    - name: Restart Apache
+      service:
+        name: apache2
+        state: restarted
